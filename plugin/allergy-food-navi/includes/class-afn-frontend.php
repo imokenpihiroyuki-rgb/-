@@ -129,9 +129,21 @@ final class Frontend
             $title = get_the_title();
             $maker = self::maker_label((int) $post_id);
             $main_protein = (string) ACF::get_field('main_protein', $post_id, '');
+            $primary_url = self::primary_url((int) $post_id);
+            $primary_rel = $primary_url === get_permalink($post_id) ? 'noopener' : 'nofollow sponsored noopener';
+            $thumb_html = get_the_post_thumbnail($post_id, 'medium_large', [
+                'class' => 'rf-card__thumb',
+                'loading' => 'lazy',
+                'decoding' => 'async',
+            ]);
 
             echo '<article class="rf-card">';
-            echo '<h3 class="rf-card__title">' . esc_html($title) . '</h3>';
+            if ($thumb_html) {
+                echo '<a class="rf-card__thumb-link" href="' . esc_url($primary_url) . '" target="_blank" rel="' . esc_attr($primary_rel) . '">';
+                echo $thumb_html;
+                echo '</a>';
+            }
+            echo '<h3 class="rf-card__title"><a href="' . esc_url($primary_url) . '" target="_blank" rel="' . esc_attr($primary_rel) . '">' . esc_html($title) . '</a></h3>';
             echo '<ul class="rf-card__meta">';
             echo '<li><strong>メーカー:</strong> ' . esc_html($maker) . '</li>';
             if ($main_protein !== '') {
@@ -168,6 +180,16 @@ final class Frontend
         }
 
         return $maker;
+    }
+
+    private static function primary_url(int $post_id): string
+    {
+        $product_url = Utils::normalize_url(ACF::get_field('product_url', $post_id, ''));
+        if ($product_url !== '') {
+            return $product_url;
+        }
+
+        return (string) get_permalink($post_id);
     }
 
     private static function normalize_view(string $view): string
