@@ -77,6 +77,7 @@ final class Quick_Edit
             echo '<span class="input-text-wrap" style="display:inline-block;min-width:60%;">';
 
             if ($def['type'] === 'checkbox') {
+                echo '<input type="hidden" name="afn_qe_present_' . esc_attr($name) . '" value="1">';
                 foreach (self::pack_choices() as $value => $label) {
                     echo '<label style="margin-right:10px;display:inline-block;">';
                     echo '<input type="checkbox" name="afn_qe_' . esc_attr($name) . '[]" value="' . esc_attr($value) . '"> ' . esc_html($label);
@@ -146,6 +147,10 @@ final class Quick_Edit
             $key = 'afn_qe_' . $name;
 
             if ($def['type'] === 'checkbox') {
+                $presence_key = 'afn_qe_present_' . $name;
+                if (! isset($_POST[$presence_key])) {
+                    continue;
+                }
                 $vals = isset($_POST[$key]) ? array_map('sanitize_text_field', (array) wp_unslash($_POST[$key])) : [];
                 ACF::update_field($name, $vals, $post_id);
                 continue;

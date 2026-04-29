@@ -17,10 +17,10 @@ final class Query_Builder
             'paged' => $for_pdf ? 1 : max(1, get_query_var('paged') ?: (int) (Utils::request('paged', 1))),
         ];
 
-        $proteins = Utils::request('protein', []);
+        $proteins = self::normalize_to_array(Utils::request('protein', []));
         $hp = Utils::request('hp', '');
         $oi = Utils::request('oi', '');
-        $makers = Utils::request('maker', []);
+        $makers = self::normalize_to_array(Utils::request('maker', []));
         $sort = Utils::request('sort', '');
 
         $meta = ['relation' => 'AND'];
@@ -74,14 +74,35 @@ final class Query_Builder
     public static function get_search_conditions(): array
     {
         return [
-            'protein' => Utils::request('protein', []),
+            'protein' => self::normalize_to_array(Utils::request('protein', [])),
             'hp' => Utils::request('hp', ''),
             'oi' => Utils::request('oi', ''),
-            'maker' => Utils::request('maker', []),
+            'maker' => self::normalize_to_array(Utils::request('maker', [])),
             'sort' => Utils::request('sort', ''),
             'view' => Utils::request('view', 'card'),
             'pdf_show_ec' => Utils::request('pdf_show_ec', ''),
         ];
+    }
+
+    /**
+     * @param mixed $value
+     * @return string[]
+     */
+    private static function normalize_to_array($value): array
+    {
+        if (is_array($value)) {
+            $items = $value;
+        } elseif ($value === null || $value === '') {
+            $items = [];
+        } else {
+            $items = [$value];
+        }
+
+        return array_values(array_filter(array_map(static function ($item): string {
+            return sanitize_text_field((string) $item);
+        }, $items), static function (string $item): bool {
+            return $item !== '';
+        }));
     }
 
     private static function apply_maker_order(array &$args): void
